@@ -56,18 +56,18 @@ book = Bookkeeper()
 
 
 def load_map_info():
-	maps={}
-	for root,dirs,filenames in os.walk("maps"):
-		for filename in filenames:
-			file = os.path.join(root, filename)
-			mf = open(file,"r")
-			for line in mf:
-				if line.startswith('players'):	p = int(line.split()[1])
-				if line.startswith('rows'):		r = int(line.split()[1])
-				if line.startswith('cols'):		c = int(line.split()[1])
-			mf.close()
-			maps[file] = [p,r,c,0]
-	return maps
+    maps={}
+    for root,dirs,filenames in os.walk("maps"):
+        for filename in filenames:
+            file = os.path.join(root, filename)
+            mf = open(file,"r")
+            for line in mf:
+                if line.startswith('players'):    p = int(line.split()[1])
+                if line.startswith('rows'):        r = int(line.split()[1])
+                if line.startswith('cols'):        c = int(line.split()[1])
+            mf.close()
+            maps[file] = [p,r,c,0]
+    return maps
 
 
 
@@ -466,53 +466,55 @@ class TCPGameServer(object):
             except KeyboardInterrupt, e:
                 return
 
-            for s in inputready:
-                if s == self.server:
-                    client, address = self.server.accept()
-                    data = client.recv(4096).strip()
-                    data = data.split(" ")
-                    name = data[1]
-                    password = data[2]
-                    name_ok = True
-                    for bw in ["shit","porn","pr0n","pron","dick","tits","hitler","fuck","gay","cunt","asshole"]:
-                        if name.find(bw) > -1:
-                            self.reject_client(client, "can you think of another name than '%s', please ?" % name )
-                            name_ok = False
-                            break
-                    if not name_ok:
-                        continue
-                    # if in 'single game per player(name)' mode, just reject the connection here..
-                    if (name in book.players) and (str(self.opts['multi_games'])=="False"):
-                        self.reject_client(client, "%s is already running a game." % name, False )
-                        continue
-                    # already in next_game ?
-                    if name in next_game.players:
-                        self.reject_client(client, '%s is already queued for game %d' % (name, next_game.id), False )
-                        continue
+            try:
+                for s in inputready:
+                    if s == self.server:
+                        client, address = self.server.accept()
+                        data = client.recv(4096).strip()
+                        data = data.split(" ")
+                        name = data[1]
+                        password = data[2]
+                        name_ok = True
+                        for bw in ["shit","porn","pr0n","pron","dick","tits","hitler","fuck","gay","cunt","asshole"]:
+                            if name.find(bw) > -1:
+                                self.reject_client(client, "can you think of another name than '%s', please ?" % name )
+                                name_ok = False
+                                break
+                        if not name_ok:
+                            continue
+                        # if in 'single game per player(name)' mode, just reject the connection here..
+                        if (name in book.players) and (str(self.opts['multi_games'])=="False"):
+                            self.reject_client(client, "%s is already running a game." % name, False )
+                            continue
+                        # already in next_game ?
+                        if name in next_game.players:
+                            self.reject_client(client, '%s is already queued for game %d' % (name, next_game.id), False )
+                            continue
 
-                    # start game if enough players joined
-                    avail = self.addplayer( next_game, name, password, client )
-                    if avail==-1:
-                        continue
-                    log.info('user %s connected to game %d (%d/%d)' % (name,next_game.id,avail,next_game.nplayers))
-                    if avail == next_game.nplayers:
-                        next_game.start()
-                        next_game = self.create_game()
+                        # start game if enough players joined
+                        avail = self.addplayer( next_game, name, password, client )
+                        if avail==-1:
+                            continue
+                        log.info('user %s connected to game %d (%d/%d)' % (name,next_game.id,avail,next_game.nplayers))
+                        if avail == next_game.nplayers:
+                            next_game.start()
+                            next_game = self.create_game()
 
-            # remove bots from next_game that died between connect and the start of the game
-            for i, b in enumerate(next_game.bots):
-                if (not b.sock) or (not b.is_alive):
-                    log.info( "removed %s from next_game:%d" % (b.name, next_game.id) )
-                    del( next_game.bots[i] )
-                    del( next_game.players[i] )
+                # remove bots from next_game that died between connect and the start of the game
+                for i, b in enumerate(next_game.bots):
+                    if (not b.sock) or (not b.is_alive):
+                        log.info( "removed %s from next_game:%d" % (b.name, next_game.id) )
+                        del( next_game.bots[i] )
+                        del( next_game.players[i] )
 
-            if t % 100 == 1:
-                log.info("%d games, %d players online." % (len(book.games),len(book.players)) )
-            t += 1
-            sleep(0.005)
+                if t % 100 == 1:
+                    log.info("%d games, %d players online." % (len(book.games),len(book.players)) )
+                t += 1
+                sleep(0.005)
+            except: 
+                pass
 
         self.shutdown()
-
 
 
 
@@ -538,7 +540,7 @@ def main(tcp_port):
         'kill_points': 2,
 
         ## non-ants related tcp opts
-        'trueskill': 'jskills',	# select trueskill implementation: 'py'(trueskill.py) or 'jskills'(java JSkills_0.9.0.jar)
+        'trueskill': 'jskills',    # select trueskill implementation: 'py'(trueskill.py) or 'jskills'(java JSkills_0.9.0.jar)
         'multi_games': 'True',  # allow users to play multiple games at the same time
                                 # if set to False, players will have to wait until their latest game ended
     }
