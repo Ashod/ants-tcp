@@ -108,12 +108,15 @@ class AntsHttpServer(HTTPServer):
             log.error("caching %s failed. %s" % (fname,e))
 
 
-    def cache_dir(self,dir):
+    def cache_dir(self, dir):
         for root,dirs,filenames in os.walk(dir):
             for filename in filenames:
-                fname = "/" + dir + "/" + filename
-                fpath = dir + "/" + filename
-                self.cache_file(fname,fpath)
+                # fpath is the actual system path.
+                fpath = os.path.join(root, filename)
+                # fname is the name used by the client.
+                fname = '/' + fpath
+                fname = fname.replace('\\', '/')
+                self.cache_file(fname, fpath)
 
 
 class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -329,8 +332,8 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def serve_map( self, match ):
         try:
-            mapname = match.group(0).split('/')[2]
-            m = self.server.cache["/maps/"+mapname]
+            mapname = match.group(1)
+            m = self.server.cache[mapname]
         except:
             self.send_error(404, 'Map Not Found: %s' % self.path)
             return
@@ -400,7 +403,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 ('^\/ranking/p([0-9]?)', self.serve_ranking),
                 ('^\/ranking', self.serve_ranking),
                 ('^\/maps', self.serve_maps),
-                ('^\/map/(.*)', self.serve_map),
+                ('^\/map(\/.*)', self.serve_map),
                 ('^\/player\/(.*)', self.serve_player),
                 ('^\/replay\.([0-9]+)', self.serve_visualizer),
                 ('^\/p([0-9]?)', self.serve_main),
