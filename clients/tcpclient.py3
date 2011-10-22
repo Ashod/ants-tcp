@@ -167,10 +167,14 @@ def main():
     try:
         rounds = int(sys.argv[6])
     except:
-        rounds = 1
+        rounds = -1
 
-    for i in range(rounds):
-        tcp(host, port, botpath, pname, password, {})
+    if rounds == -1:
+        while True:
+            tcp(host, port, botpath, pname, password, {})
+    else:
+        for i in range(rounds):
+            tcp(host, port, botpath, pname, password, {})
 
 if __name__ == "__main__":
     main()
