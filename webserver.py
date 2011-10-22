@@ -252,20 +252,23 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def serve_howto(self, match):
         html = self.header( "HowTo" )
         html += """
-		Here's how to play a game on TCP...<br>
+		Here's how to play a game on TCP...</ br>
 		<ol>
 		<li>Download a client from the above menu (one is for Python 2.x the other for Python 3.x)</li>
-		<li>Run: python tcpclient.py 212.34.245.143 2081 "python MyBot.py" username password 1</li>
-		<li>Change the game runner to fit your bot.</li>
-		<li>Change choose unique username and password pair.</li>
+		<li>Run: python tcpclient.py 209.62.17.40 2081 "python MyBot.py" username password 1</li>
+		<li>Change the game runner to fit your bot. (Can be any command.)</li>
+		<li>Change choose unique username and password pair. (Anything unique works.)</li>
+		<li>The last parameter is the number of games to play in a row. Default is 1, if not specified.</li>
 		<li>See your rank in the ranking page.</li>
 		<li>Profit!</li>
 		</ol>
+		</ br>
+		Notes: Use python 2.x. Run tcpclient.py without params to see usage.
 		"""
         html += self.footer()
         html += "</body></html>"
         self.wfile.write(html)
-		
+
     def serve_maps(self, match):
         html = self.header( "%d maps" % len(self.server.maps) )
         html += "<table id='maps' class='tablesorter' width='70%'>"
@@ -455,7 +458,13 @@ def main(web_port, root_folder = ''):
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 3:
+        import os
+        fpid = os.fork()
+        if fpid!=0:
+          # Running as daemon now. PID is fpid
+          sys.exit(0)
+    elif len(sys.argv) > 2:
         main(int(sys.argv[1]), str(sys.argv[2]))
     elif len(sys.argv) > 1:
         main(int(sys.argv[1]))
