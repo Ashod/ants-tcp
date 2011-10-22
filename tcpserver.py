@@ -352,11 +352,12 @@ class TcpGame(threading.Thread):
 
 
 class TCPGameServer(object):
-    def __init__(self, opts, port, maps):
+    def __init__(self, opts, ip, port, maps):
         self.opts = opts
         self.maps = maps
 
         # tcp binding options
+        self.ip = ip
         self.port = port
         self.backlog = 5
 
@@ -387,7 +388,7 @@ class TCPGameServer(object):
     def bind(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind(('',self.port))
+        self.server.bind((self.ip,self.port))
         log.info('Listening to port %d ...' % self.port)
         self.server.listen(self.backlog)
 
@@ -511,7 +512,7 @@ class TCPGameServer(object):
                     log.info("%d games, %d players online." % (len(book.games),len(book.players)) )
                 t += 1
                 sleep(0.005)
-            except: 
+            except:
                 pass
 
         self.shutdown()
@@ -519,7 +520,7 @@ class TCPGameServer(object):
 
 
 
-def main(tcp_port):
+def main(ip = '', tcp_port = 2081):
 
     opts = {
         ## tcp opts:
@@ -549,14 +550,23 @@ def main(tcp_port):
         print("Error: Found no maps! Please create a few in the maps/ folder.")
         return
 
-    tcp = TCPGameServer( opts, tcp_port, maps )
+    tcp = TCPGameServer( opts, ip, tcp_port, maps )
     tcp.serve()
 
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1:
+
+    if len(sys.argv) > 3:
+        import os
+        fpid = os.fork()
+        if fpid!=0:
+          # Running as daemon now. PID is fpid
+          sys.exit(0)
+    elif len(sys.argv) > 2:
+        main(sys.argv[1], int(sys.argv[2]))
+    elif len(sys.argv) > 1:
         main(int(sys.argv[1]))
     else:
-        main(2081)
+        main()
 
