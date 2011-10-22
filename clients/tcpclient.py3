@@ -63,6 +63,7 @@ def tcp(host, port, bot_command, user, password, options):
         bot = subprocess.Popen(bot_command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
+            shell=True,
             cwd=".")
     except:
         print( 'your bot ('+str(bot_command)+') failed to start!' )
@@ -116,9 +117,9 @@ def tcp(host, port, bot_command, user, password, options):
         client_mess=""
         while 1:
             answer = bot.stdout.readline()
-            if not answer:	break
+            if not answer:    break
             client_mess += answer 
-            if answer.startswith("go"):	break
+            if answer.startswith("go"):    break
         
         # if there's no orders, send at least an empty line
         if (client_mess==""):
@@ -165,13 +166,9 @@ def main():
         rounds = int(sys.argv[6])
     except:
         rounds = 1
-
-    
+   
     for i in range(rounds):
         tcp(host, port, botpath, pname, password, {})
-        
-    # keep konsole window open (for debugging)
-    sys.stdin.read()
     
 if __name__ == "__main__":
     main()
