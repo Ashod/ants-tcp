@@ -42,7 +42,10 @@ log.addHandler(ch)
 
 BUFSIZ = 4096
 
-
+MAP_PLAYERS_INDEX = 0
+MAP_COLS_INDEX = 1
+MAP_ROWS_INDEX = 2
+MAP_GAMES_INDEX = 3
 
 ## ugly global 
 class Bookkeeper:
@@ -56,13 +59,14 @@ def load_map_info():
 	maps={}
 	for root,dirs,filenames in os.walk("maps"):
 		for filename in filenames:
-			mf = open("maps/"+filename,"r")
+			file = os.path.join(root, filename)
+			mf = open(file,"r")
 			for line in mf:
 				if line.startswith('players'):	p = int(line.split()[1])
 				if line.startswith('rows'):		r = int(line.split()[1])
 				if line.startswith('cols'):		c = int(line.split()[1])
 			mf.close()
-			maps[filename] = [p,r,c,0]
+			maps[file] = [p,r,c,0]
 	return maps
 
 
@@ -398,21 +402,20 @@ class TCPGameServer(object):
         max_players = len(book.players)/2
         if max_players < 2:
             max_players = 2
-        base_name = random.choice( self.maps.keys() )
+        map_path = random.choice( self.maps.keys() )
 
-        while( self.maps[base_name][0] > max_players ):
-            base_name = random.choice( self.maps.keys() )
-        self.maps[base_name][3] += 1
+        while( self.maps[map_path][MAP_PLAYERS_INDEX] > max_players ):
+            map_path = random.choice( self.maps.keys() )
+        self.maps[map_path][MAP_GAMES_INDEX] += 1
         
-        map_name = os.path.join( 'maps', base_name )
         data = ""
-        f = open(map_name, 'r')
+        f = open(map_path, 'r')
         for line in f:
             data += line
             if line.startswith('players'):
                 nplayers = line.split()[1]
         f.close()
-        return base_name, data, int(nplayers)
+        return map_path, data, int(nplayers)
         
     
     def create_game(self):
@@ -443,7 +446,12 @@ class TCPGameServer(object):
     def serve(self):
         # have to create the game before collecting respective num of players:
         self.db = game_db.GameDB()
-        self.latest = int(self.db.retrieve("select id from games order by id desc limit 1;",())[0][0])
+        games = self.db.retrieve("select id from games order by id desc limit 1;",())
+        if len(games) > 0:
+            self.latest = int(games[0][0])
+        else:
+            self.latest = 0
+		
         next_game = self.create_game()
         t = 0
         while self.server:
@@ -537,6 +545,10 @@ def main():
                                 # if set to False, players will have to wait until their latest game ended
     }
     maps = load_map_info()
+    if len(maps) == 0:
+        print("Error: Found no maps! Please create a few in the maps/ folder.")
+        return
+
     tcp = TCPGameServer( opts, tcp_port, maps )
     tcp.serve()
 
