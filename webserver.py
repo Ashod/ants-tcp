@@ -150,8 +150,9 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         <a href='/' name=top> Games </a> &nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/ranking'> Rankings </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/maps'> Maps </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <a href='/tcpclient.py' title='get the python client'> Client.py </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <a href='/tcpclient.py3' title='get the python3 client'> Client.py3 </a>
+        <a href='/tcpclient.py' title='get the python 2.x client'> Client.py </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href='/tcpclient.py3' title='get the python 3.x client'> Client.py3 </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href='/howto' title='help to connect'> HowTo </a>
         <br><p></b>
         """
         return head
@@ -248,6 +249,23 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         html += "</tr>\n"
         return html
 
+    def serve_howto(self, match):
+        html = self.header( "HowTo" )
+        html += """
+		Here's how to play a game on TCP...<br>
+		<ol>
+		<li>Download a client from the above menu (one is for Python 2.x the other for Python 3.x)</li>
+		<li>Run: python tcpclient.py 212.34.245.143 2081 "python MyBot.py" username password 1</li>
+		<li>Change the game runner to fit your bot.</li>
+		<li>Change choose unique username and password pair.</li>
+		<li>See your rank in the ranking page.</li>
+		<li>Profit!</li>
+		</ol>
+		"""
+        html += self.footer()
+        html += "</body></html>"
+        self.wfile.write(html)
+		
     def serve_maps(self, match):
         html = self.header( "%d maps" % len(self.server.maps) )
         html += "<table id='maps' class='tablesorter' width='70%'>"
@@ -402,6 +420,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for regex, func in (
                 ('^\/ranking/p([0-9]?)', self.serve_ranking),
                 ('^\/ranking', self.serve_ranking),
+                ('^\/howto', self.serve_howto),
                 ('^\/maps', self.serve_maps),
                 ('^\/map(\/.*)', self.serve_map),
                 ('^\/player\/(.*)', self.serve_player),
@@ -419,9 +438,8 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 
-def main():
+def main(web_port, root_folder = ''):
 
-    web_port = 2080
     opts = {
         ## web opts:
         'sort': 'True',            # include tablesorter & jquery and have sortable tables(requires ~70kb additional download)
@@ -436,6 +454,12 @@ def main():
     web.serve_forever()
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 2:
+        main(int(sys.argv[1]), str(sys.argv[2]))
+    elif len(sys.argv) > 1:
+        main(int(sys.argv[1]))
+    else:
+        main(2080)
 
 
