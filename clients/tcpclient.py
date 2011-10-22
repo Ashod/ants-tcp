@@ -59,78 +59,80 @@ def tcp(host, port, bot_command, user, password, options):
 
     # start bot
     try:
+        import os
         bot = subprocess.Popen(bot_command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            shell=True,
+            shell=(os.name == "posix"),
             cwd=".")
     except:
         print( 'your bot ('+str(bot_command)+') failed to start!' )
         return;
 
-    while sock:
-        end_reached = False
-        # get input, send it to bot
-        bot_input = ""
-        while sock:
-            try:
-                line = readline(sock)
-            except: return
-
-            if not line:
-                if end_reached:
-                    sock.close()
-                    sock = None
-                    bot.kill()
-                    return
-                continue # bad connection, keep on trying
-
-            print( line )
-            if line.startswith("INFO:"): # not meant for the bot
-                if (line.find("already running")>0) or (line.find("already queued")>0):
-                    ## penalty for getting eliminated, but still trying to be first in the upcoming game.
-                    time_out += 10.0 + 10.0*random.random()
-                continue
-
-            bot_input += line + "\n"
-            if line.startswith("end"):
-                end_reached = True
-            if line.startswith("ready"):
-                time_out = 1.0
-                break
-            if line.startswith("go"):
-                if end_reached:
-                    sock.close()
-                    sock = None
-                    bot.kill()
-                    return
-                break
-
-        if not sock:
-            break
-
-        bot.stdin.write(bot_input)
-        bot.stdin.flush()
-
-        # get bot output, send to serv
-        client_mess=""
-        while 1:
-            answer = bot.stdout.readline()
-            if not answer:    break
-            client_mess += answer
-            if answer.startswith("go"):    break
-
-        # if there's no orders, send at least an empty line
-        if (client_mess==""):
-            client_mess="\r\n"
-        print( client_mess )
-
-        sock.sendall( client_mess )
-
     try:
-        bot.kill()
-    except:
-        pass
+        while sock:
+            end_reached = False
+            # get input, send it to bot
+            bot_input = ""
+            while sock:
+                try:
+                    line = readline(sock)
+                except: return
+
+                if not line:
+                    if end_reached:
+                        sock.close()
+                        sock = None
+                        bot.kill()
+                        return
+                    continue # bad connection, keep on trying
+
+                print( line )
+                if line.startswith("INFO:"): # not meant for the bot
+                    if (line.find("already running")>0) or (line.find("already queued")>0):
+                        ## penalty for getting eliminated, but still trying to be first in the upcoming game.
+                        time_out += 10.0 + 10.0*random.random()
+                    continue
+
+                bot_input += line + "\n"
+                if line.startswith("end"):
+                    end_reached = True
+                if line.startswith("ready"):
+                    time_out = 1.0
+                    break
+                if line.startswith("go"):
+                    if end_reached:
+                        sock.close()
+                        sock = None
+                        bot.kill()
+                        return
+                    break
+
+            if not sock:
+                break
+
+            bot.stdin.write(bot_input)
+            bot.stdin.flush()
+
+            # get bot output, send to serv
+            client_mess=""
+            while 1:
+                answer = bot.stdout.readline()
+                if not answer:    break
+                client_mess += answer
+                if answer.startswith("go"):    break
+
+            # if there's no orders, send at least an empty line
+            if (client_mess==""):
+                client_mess="\r\n"
+            print( client_mess )
+
+            sock.sendall( client_mess )
+    finally:
+        try:
+            bot.kill()
+        except:
+            pass
 
 
 
