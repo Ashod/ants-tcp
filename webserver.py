@@ -255,10 +255,10 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		Here's how to play a game on TCP...</ br>
 		<ol>
 		<li>Download a client from the above menu (one is for Python 2.x the other for Python 3.x)</li>
-		<li>Run: python tcpclient.py 209.62.17.40 2081 "python MyBot.py" username password 1</li>
+		<li>Run: python tcpclient.py 209.62.17.40 2081 "python MyBot.py" username password -1</li>
 		<li>Change the game runner to fit your bot. (Can be any command.)</li>
 		<li>Change choose unique username and password pair. (Anything unique works.)</li>
-		<li>The last parameter is the number of games to play in a row. Default is 1, if not specified.</li>
+		<li>The last parameter is the number of games to play in a row. Default is -1, if not specified, which causes it to play games until you tell it to stop. (This is what you usually want)</li>
 		<li>See your rank in the ranking page.</li>
 		<li>Profit!</li>
 		</ol>
